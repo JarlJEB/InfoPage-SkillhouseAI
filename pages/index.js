@@ -93,7 +93,7 @@ ${context}`;
                   <span
                     key={j}
                     className="inline-block opacity-0 animate-fade-in"
-                    style={{ animationDelay: \`\${j * 150}ms\` }}
+                    style={{ animationDelay: `${j * 150}ms` }}
                   >
                     {word + ' '}
                   </span>
