@@ -1,26 +1,26 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from "react";
 
 export default function Home() {
   const [messages, setMessages] = useState([
-    { from: 'bot', words: ['Hei!', 'Hva', 'lurer', 'du', 'på?'] }
+    { from: "bot", words: ["Hei!", "Hva", "lurer", "du", "på?"] },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const timeoutRef = useRef(null);
 
   const fakeAIResponse = (question) => {
-    return `Skillhouse er et spesialisert teknologiselskap som kobler bedrifter med de beste konsulentene og kandidatene innen elektro, automasjon og bygg.`;
+    return `Skillhouse tilbyr rekruttering og konsulentformidling innen elektro, automasjon og bygg.`;
   };
 
   const handleSend = () => {
     if (!input.trim()) return;
     const question = input.trim();
-    setInput('');
+    setInput("");
     const reply = fakeAIResponse(question);
-    const words = reply.split(' ');
+    const words = reply.split(" ");
 
-    setMessages(prev => [
-      { from: 'user', text: question },
+    setMessages((prev) => [
+      { from: "user", text: question },
       ...prev,
     ]);
 
@@ -28,13 +28,13 @@ export default function Home() {
     clearTimeout(timeoutRef.current);
 
     const animateWords = () => {
-      setMessages(prev => {
-        const others = prev.filter(m => !(m.from === 'bot' && m.words));
-        const prevBot = prev.find(m => m.from === 'bot' && m.words);
+      setMessages((prev) => {
+        const others = prev.filter((m) => !(m.from === "bot" && m.words));
+        const prevBot = prev.find((m) => m.from === "bot" && m.words);
         const newWords = prevBot ? [...prevBot.words, words[i]] : [words[i]];
         return [
-          { from: 'bot', words: newWords },
-          ...others
+          { from: "bot", words: newWords },
+          ...others,
         ];
       });
 
@@ -48,14 +48,14 @@ export default function Home() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleSend();
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#312f2f] text-white flex flex-col items-center px-4 pt-[38vh] pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-[#312f2f] text-white flex flex-col items-center px-4 pt-[45vh] pb-24 relative overflow-hidden">
       <div className="w-full max-w-2xl space-y-6 mb-12">
         {[...messages].reverse().map((msg, i) => (
           <div key={i} className="text-[16px] leading-relaxed">
@@ -70,7 +70,7 @@ export default function Home() {
                     style={{
                       opacity: 0,
                       animation: `fadeIn 0.4s ease forwards`,
-                      animationDelay: `${j * 150}ms`
+                      animationDelay: `${j * 150}ms`,
                     }}
                   >
                     {word}
@@ -81,7 +81,7 @@ export default function Home() {
           </div>
         ))}
       </div>
-      <div className="absolute top-[38vh] w-full max-w-2xl flex items-center gap-2 px-4">
+      <div className="absolute top-[45vh] w-full max-w-2xl flex items-center gap-2 px-4">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
