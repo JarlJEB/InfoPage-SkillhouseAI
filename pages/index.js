@@ -9,15 +9,13 @@ export default function Home() {
   const timeoutRef = useRef(null);
 
   const fakeAIResponse = (question) => {
-    return `Takk for spørsmålet. Skillhouse er et teknologiselskap med fokus på rekruttering og konsulentformidling innen elektro, automasjon og bygg.`;
+    return `Skillhouse er et spesialisert teknologiselskap som kobler bedrifter med de beste konsulentene og kandidatene innen elektro, automasjon og bygg.`;
   };
 
   const handleSend = () => {
     if (!input.trim()) return;
-
     const question = input.trim();
     setInput('');
-
     const reply = fakeAIResponse(question);
     const words = reply.split(' ');
 
@@ -31,9 +29,9 @@ export default function Home() {
 
     const animateWords = () => {
       setMessages(prev => {
+        const others = prev.filter(m => !(m.from === 'bot' && m.words));
         const prevBot = prev.find(m => m.from === 'bot' && m.words);
         const newWords = prevBot ? [...prevBot.words, words[i]] : [words[i]];
-        const others = prev.filter(m => !(m.from === 'bot' && m.words));
         return [
           { from: 'bot', words: newWords },
           ...others
@@ -42,7 +40,7 @@ export default function Home() {
 
       i++;
       if (i < words.length) {
-        timeoutRef.current = setTimeout(animateWords, 120);
+        timeoutRef.current = setTimeout(animateWords, 150);
       }
     };
 
@@ -57,10 +55,10 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#312f2f] text-white flex flex-col items-center px-4 pt-[45vh] pb-24 relative overflow-hidden">
-      <div className="w-full max-w-2xl space-y-4 mb-12">
+    <div className="min-h-screen bg-[#312f2f] text-white flex flex-col items-center px-4 pt-[38vh] pb-24 relative overflow-hidden">
+      <div className="w-full max-w-2xl space-y-6 mb-12">
         {[...messages].reverse().map((msg, i) => (
-          <div key={i} className="text-[17px] leading-relaxed">
+          <div key={i} className="text-[16px] leading-relaxed">
             {msg.text && (
               <p className="text-right text-skillwhite">{msg.text}</p>
             )}
@@ -83,7 +81,7 @@ export default function Home() {
           </div>
         ))}
       </div>
-      <div className="absolute top-[45vh] w-full max-w-2xl flex items-center gap-2 px-4">
+      <div className="absolute top-[38vh] w-full max-w-2xl flex items-center gap-2 px-4">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -93,7 +91,7 @@ export default function Home() {
         />
         <button
           onClick={handleSend}
-          className="bg-skillgreen hover:opacity-90 text-white rounded-xl px-4 py-2 transition"
+          className="bg-skillgreen hover:opacity-90 text-white rounded-xl px-4 py-2 transition text-lg"
         >
           ➤
         </button>
