@@ -1,129 +1,124 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import chunks from '../data/skillhouse_chunks.json';
 
-export default function InfoPage() {
-  const [messages, setMessages] = useState([]);
+export default function Home() {
+  const [messages, setMessages] = useState([
+    { from: 'bot', words: ['Hei!', 'Hva', 'lurer', 'du', 'på?'] }
+  ]);
   const [input, setInput] = useState('');
-  const [placeholder, setPlaceholder] = useState('');
-  const [messageCount, setMessageCount] = useState(0);
-
-  useEffect(() => {
-    const intro = "Hei! Hva lurer du på?";
-    const words = intro.split(' ');
-    let i = 0;
-    const interval = setInterval(() => {
-      setMessages([{ from: 'bot', words: words.slice(0, i + 1) }]);
-      i++;
-      if (i === words.length) {
-        clearInterval(interval);
-        setPlaceholder('Spør meg om Skillhouse...');
-      }
-    }, 250);
-  }, []);
+  const containerRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   const findRelevantChunk = (question) => {
     const q = question.toLowerCase();
-    let bestMatch = chunks[0];
-    let score = 0;
-
-    chunks.forEach(chunk => {
-      const combined = (chunk.title + ' ' + chunk.content).toLowerCase();
-      const count = q.split(' ').filter(word => combined.includes(word)).length;
-      if (count > score) {
-        score = count;
-        bestMatch = chunk;
-      }
-    });
-
-    return bestMatch.content;
+    return chunks.find(chunk => chunk.content.toLowerCase().includes(q)) || chunks[0];
   };
 
   const fakeOpenAISummary = (context, question) => {
-    return `> (Simulert svar basert på dokumentet)
-${context}`;
+    return `Basert på informasjonen min: ${context.content}`;
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
+
     const question = input.trim();
     setInput('');
-    setMessageCount((count) => count + 1);
-
-    setMessages((prev) => {
-      const updated = [
-        { from: 'user', text: question },
-        ...prev
-      ];
-      return updated.slice(0, 6);
-    });
 
     const context = findRelevantChunk(question);
     const reply = fakeOpenAISummary(context, question);
     const words = reply.split(' ');
-    let i = 0;
 
-    const interval = setInterval(() => {
-      setMessages((prev) => {
-        const existing = prev.filter((m) => m.from !== 'bot');
-        const botMsg = { from: 'bot', words: words.slice(0, i + 1) };
-        return [botMsg, ...existing].slice(0, 6);
+    setMessages(prev => [
+      { from: 'user', text: question },
+      ...prev,
+    ]);
+
+    // Animate words in sequence
+    let i = 0;
+    clearTimeout(timeoutRef.current);
+
+    const animateWords = () => {
+      setMessages(prev => {
+        const prevBot = prev.find(m => m.from === 'bot' && m.words);
+        const newWords = prevBot ? [...prevBot.words, words[i]] : [words[i]];
+        const others = prev.filter(m => !(m.from === 'bot' && m.words));
+        return [
+          { from: 'bot', words: newWords },
+          ...others
+        ];
       });
+
       i++;
-      if (i === words.length) {
-        clearInterval(interval);
-        setPlaceholder(
-          messageCount + 1 >= 3 ? 'Vil du høre en suksesshistorie?' : 'Lurer du på noe annet?'
-        );
+      if (i < words.length) {
+        timeoutRef.current = setTimeout(animateWords, 120);
       }
-    }, 150);
+    };
+
+    timeoutRef.current = setTimeout(animateWords, 300);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 pt-[40vh] relative bg-[#312f2f] text-skillwhite font-sans overflow-hidden">
-      <div className="w-full max-w-2xl flex flex-col items-start space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-        {messages.map((msg, i) => (
-          <p
-            key={i}
-            className={`whitespace-pre-wrap transition-opacity duration-500 ${
-              msg.from === 'bot' ? 'italic' : 'font-semibold'
-            }`}
-          >
-            {msg.words
-              ? msg.words.map((word, j) => (
+    <div className="min-h-screen bg-[#312f2f] text-white flex flex-col items-center justify-center px-4 pt-32 pb-20 relative overflow-hidden">
+      <div ref={containerRef} className="w-full max-w-2xl space-y-4 mb-12">
+        {[...messages].reverse().map((msg, i) => (
+          <div key={i} className="text-lg leading-relaxed">
+            {msg.text && (
+              <p className="text-right text-skillwhite opacity-90">{msg.text}</p>
+            )}
+            {msg.words && (
+              <p className="italic text-skillwhite flex flex-wrap gap-1">
+                {msg.words.map((word, j) => (
                   <span
                     key={j}
-                    className="inline-block opacity-0 animate-fade-in"
-                    style={{ animationDelay: `${j * 150}ms` }}
+                    style={{
+                      opacity: 0,
+                      animation: `fadeIn 0.4s ease forwards`,
+                      animationDelay: `${j * 150}ms`
+                    }}
                   >
-                    {word + ' '}
+                    {word}
                   </span>
-                ))
-              : msg.text}
-          </p>
+                ))}
+              </p>
+            )}
+          </div>
         ))}
       </div>
-      <div className="w-full max-w-2xl mt-8 flex items-center">
+      <div className="fixed bottom-10 w-full max-w-2xl flex items-center gap-2 px-4">
         <input
-          type="text"
-          className="bg-transparent border-none text-skillwhite placeholder-gray-500 focus:outline-none flex-1 text-lg"
-          placeholder={placeholder}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={handleKeyDown}
+          placeholder="Skriv et spørsmål her..."
+          className="flex-1 bg-[#312f2f] text-white border-none focus:outline-none text-lg placeholder-gray-400"
         />
         <button
           onClick={handleSend}
-          className="ml-4 p-2 bg-skillgreen rounded-md hover:bg-opacity-80 transition"
-          aria-label="Send"
+          className="bg-skillgreen hover:opacity-90 text-white rounded-xl px-4 py-2 transition"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-skillwhite" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14m-7-7l7 7-7 7" />
-          </svg>
+          ➤
         </button>
       </div>
-      <div className="absolute bottom-4 right-4 opacity-50">
-        <img src="/skillhouse-logo.svg" alt="Skillhouse logo" className="h-5" />
-      </div>
-    </main>
+      <img
+        src="/skillhouse-logo.svg"
+        alt="Skillhouse Logo"
+        className="fixed bottom-4 right-4 w-32 opacity-80"
+      />
+      <style jsx>{`
+        @keyframes fadeIn {
+          to {
+            opacity: 1;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
